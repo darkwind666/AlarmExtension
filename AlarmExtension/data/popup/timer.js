@@ -1,5 +1,7 @@
 'use strict';
 
+import Analytics from '../../google-analytics.js';
+
 const timer = {};
 window.timer = timer;
 
@@ -15,12 +17,38 @@ hours.addEventListener('change', e => fix(e, 0, 99));
 minutes.addEventListener('change', e => fix(e, 0, 59));
 seconds.addEventListener('change', e => fix(e, 0, 59));
 
+Analytics.fireEvent('showPopup')
+
 document.querySelector('.timer input[data-command="start"]').addEventListener('click', e => {
   if (e.isTrusted) {
     localStorage.setItem('last-used-hours', hours.value);
     localStorage.setItem('last-used-minutes', minutes.value);
     localStorage.setItem('last-used-seconds', seconds.value);
   }
+});
+
+document.addEventListener('click', e => {
+  const {command} = e.target.dataset;
+
+  if (command === 'cancel') {
+    timer.pause(true);
+  }
+  else if (command === 'resume') {
+    timer.start();
+  }
+  else if (command) {
+    timer[command]();
+  }
+});
+
+window.addEventListener('keydown', async ev => {
+  if(ev.code === 'Enter' || ev.code === 'NumpadEnter' || ev.code === 'Space') {
+    timer.start();
+  }
+})
+
+chrome.runtime.sendMessage({
+  method: 'remove-all-notifications'
 });
 
 timer.ms2time = duration => ({
@@ -67,7 +95,7 @@ timer.start = () => {
 
 timer.default = () => {
   hours.value = (localStorage.getItem('last-used-hours') || '00').padStart(2, '0');
-  minutes.value = (localStorage.getItem('last-used-minutes') || '30').padStart(2, '0');
+  minutes.value = (localStorage.getItem('last-used-minutes') || '05').padStart(2, '0');
   seconds.value = (localStorage.getItem('last-used-seconds') || '00').padStart(2, '0');
 };
 
@@ -140,4 +168,43 @@ document.querySelector('.timer [data-id="presets"]').addEventListener('click', e
     minutes.value = mm.padStart(2, '0');
     seconds.value = ss.padStart(2, '0');
   }
+});
+
+hours.addEventListener('wheel', function(event) {
+  event.preventDefault();
+
+  if (event.deltaY < 0) {
+      hours.stepUp(); 
+  } else if (event.deltaY > 0) {
+      hours.stepDown();
+  }
+
+  fix(event, 0, 99)
+
+});
+
+minutes.addEventListener('wheel', function(event) {
+  event.preventDefault();
+
+  if (event.deltaY < 0) {
+    minutes.stepUp(); 
+  } else if (event.deltaY > 0) {
+    minutes.stepDown();
+  }
+
+  fix(event, 0, 59)
+
+});
+
+seconds.addEventListener('wheel', function(event) {
+  event.preventDefault();
+
+  if (event.deltaY < 0) {
+    seconds.stepUp(); 
+  } else if (event.deltaY > 0) {
+    seconds.stepDown();
+  }
+
+  fix(event, 0, 59)
+
 });

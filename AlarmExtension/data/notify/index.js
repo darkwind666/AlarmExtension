@@ -1,16 +1,6 @@
-const args = new URLSearchParams(location.search);
+import Analytics from '../../google-analytics.js';
 
-document.querySelector('h1').textContent = args.get('title');
-document.querySelector('p').textContent = args.get('message');
-if (args.get('name').indexOf('alarm') !== -1) {
-  document.querySelector('img').src = 'imgs/alarm.svg';
-}
-else if (args.get('name').indexOf('timer') !== -1) {
-  document.querySelector('img').src = 'imgs/timer.svg';
-}
-else {
-  document.querySelector('img').src = 'imgs/stopwatch.svg';
-}
+const args = new URLSearchParams(location.search);
 
 chrome.runtime.sendMessage({
   method: 'position',
@@ -24,6 +14,8 @@ chrome.runtime.sendMessage({
   },
   position: args.get('position')
 }, () => chrome.runtime.lastError);
+
+Analytics.fireEvent('showNotification')
 
 document.getElementById('snooze').onclick = () => {
   const buttonIndex = document.getElementById('range').selectedIndex + 1;
@@ -39,19 +31,10 @@ document.getElementById('snooze').onclick = () => {
 
 document.getElementById('done').onclick = () => window.close();
 
-document.getElementById('clean').onclick = e => {
-  const v = e.target.value;
-  e.target.value = 'Clearing...';
-  chrome.runtime.sendMessage({
-    method: 'clear-alarm',
-    name: args.get('name')
-  }, () => setTimeout(() => e.target.value = v, 500));
-};
-
 // audio
 const audio = {};
 audio.cache = {};
-audio.play = (id, src, n = 5, volume = 0.8) => {
+audio.play = (id, src, n = 5, volume = 1.0) => {
   audio.stop(id);
   const e = new Audio();
   e.volume = volume;

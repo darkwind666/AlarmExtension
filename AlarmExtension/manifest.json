@@ -2,20 +2,19 @@
 "update_url": "https://clients2.google.com/service/update2/crx",
 
   "manifest_version": 3,
-  "version": "0.2.7",
-  "name": "Alarm, Timer and Stopwatch",
-  "description": "__MSG_description__",
+  "version": "0.0.1",
+  "name": "__MSG_appName__",
+  "description": "__MSG_shortDesc__",
   "default_locale": "en",
   "permissions": [
     "storage",
     "alarms",
-    "idle",
-    "contextMenus"
+    "idle"
   ],
   "offline_enabled": true,
-  "homepage_url": "https://webextension.org/listing/alarm.html",
   "background": {
-    "service_worker": "worker.js"
+    "service_worker": "worker.js",
+    "type": "module"
   },
   "icons": {
     "16": "data/icons/16.png",
@@ -29,13 +28,17 @@
   "action": {
     "default_popup": "data/popup/index.html"
   },
-  "options_ui": {
-    "page": "data/options/index.html"
-  },
   "commands": {
-    "_execute_action": {},
-    "open-interface": {
-      "description": "Open the interface in a window"
+
+    "_execute_action": {
+      "suggested_key": {
+        "default": "Alt+A",
+        "windows": "Alt+A",
+        "mac": "Alt+A",
+        "chromeos": "Alt+A",
+        "linux": "Alt+A"
+      }
     }
+    
   }
 }

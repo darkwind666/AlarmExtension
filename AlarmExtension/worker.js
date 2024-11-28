@@ -25,8 +25,8 @@ const notifications = {
       args.set('position', prefs['notify-position']);
 
       const p = {
-        width: 580,
-        height: 250,
+        width: 350,
+        height: 300,
         type: 'popup',
         url: 'data/notify/index.html?' + args.toString()
       };
@@ -53,9 +53,9 @@ const alarms = {
     });
     if (name.startsWith('timer-')) {
       chrome.storage.local.get({
-        'src-timer': 'data/sounds/4.mp3',
-        'repeats-timer': 5,
-        'volume-timer': 0.8
+        'src-timer': 'data/sounds/1.mp3',
+        'repeats-timer': 10,
+        'volume-timer': 1.0
       }, prefs => {
         set(name, 'Timer', prefs['src-timer'], prefs['repeats-timer'], prefs['volume-timer']);
       });
@@ -66,7 +66,7 @@ const alarms = {
         'alarms': [],
         'src-alarm': 'data/sounds/1.mp3',
         'repeats-alarm': 5,
-        'volume-alarm': 0.8
+        'volume-alarm': 1.0
       }, prefs => {
         const o = prefs.alarms.filter(a => a.id === id).shift();
         if (o.snooze) {
@@ -84,9 +84,9 @@ const alarms = {
       const id = name.replace('audio-', '').split('/')[0];
       chrome.storage.local.get({
         'alarms': [],
-        'src-misc': 'data/sounds/5.mp3',
-        'repeats-misc': 5,
-        'volume-misc': 0.8
+        'src-misc': 'data/sounds/1.mp3',
+        'repeats-misc': 10,
+        'volume-misc': 1.0
       }, prefs => {
         let title = 'Misc';
         if (id.startsWith('alarm-')) {
@@ -299,26 +299,6 @@ const onMessage = (request, sender, respose) => {
 };
 chrome.runtime.onMessage.addListener(onMessage);
 
-const onCommand = command => {
-  if (command === 'open-interface') {
-    chrome.windows.getCurrent(win => chrome.storage.local.get({
-      width: 400,
-      height: 600,
-      left: win.left + Math.round((win.width - 400) / 2),
-      top: win.top + Math.round((win.height - 600) / 2)
-    }, prefs => chrome.windows.create({
-      url: 'data/popup/index.html?mode=pp',
-      width: prefs.width,
-      height: prefs.height,
-      left: prefs.left,
-      top: prefs.top,
-      type: 'popup'
-    })));
-  }
-};
-chrome.commands.onCommand.addListener(onCommand);
-chrome.action.onClicked.addListener(() => onCommand('open-interface'));
-
 
 chrome.storage.onChanged.addListener(ps => {
   if (ps.mode) {
@@ -337,62 +317,27 @@ chrome.storage.onChanged.addListener(ps => {
   chrome.runtime.onStartup.addListener(once);
 }
 
-{
-  const once = () => {
-    chrome.contextMenus.create({
-      id: 'remove-all-alarms',
-      title: 'Remove all Alarms and Timers',
-      contexts: ['action']
-    });
-    chrome.contextMenus.create({
-      id: 'remove-all-notifications',
-      title: 'Remove all Notifications',
-      contexts: ['action']
-    });
-  };
-  chrome.runtime.onInstalled.addListener(once);
-  chrome.runtime.onStartup.addListener(once);
-}
-chrome.contextMenus.onClicked.addListener(info => {
-  if (info.menuItemId === 'remove-all-alarms') {
-    alarms.getAll(as => {
-      for (const a of as) {
-        chrome.alarms.clear(a.name);
-      }
-    });
-    chrome.storage.local.set({
-      'alarms-storage': {}
-    });
-  }
-  else if (info.menuItemId === 'remove-all-notifications') {
-    notifications.kill();
-  }
-});
 
-/* FAQs & Feedback */
 {
-  const {management, runtime: {onInstalled, setUninstallURL, getManifest}, storage, tabs} = chrome;
-  if (navigator.webdriver !== true) {
-    const page = getManifest().homepage_url;
-    const {name, version} = getManifest();
-    onInstalled.addListener(({reason, previousVersion}) => {
-      management.getSelf(({installType}) => installType === 'normal' && storage.local.get({
-        'faqs': true,
-        'last-update': 0
-      }, prefs => {
-        if (reason === 'install' || (prefs.faqs && reason === 'update')) {
-          const doUpdate = (Date.now() - prefs['last-update']) / 1000 / 60 / 60 / 24 > 45;
-          if (doUpdate && previousVersion !== version) {
-            tabs.query({active: true, currentWindow: true}, tbs => tabs.create({
-              url: page + '?version=' + version + (previousVersion ? '&p=' + previousVersion : '') + '&type=' + reason,
-              active: reason === 'install',
-              ...(tbs && tbs.length && {index: tbs[0].index + 1})
-            }));
-            storage.local.set({'last-update': Date.now()});
-          }
-        }
-      }));
-    });
-    setUninstallURL(page + '?rd=feedback&name=' + encodeURIComponent(name) + '&version=' + version);
-  }
+  chrome.runtime.onInstalled.addListener(async (details) => {
+    
+    if (details.reason === chrome.runtime.OnInstalledReason.INSTALL) {
+      
+      // Analytics.fireEvent('install');
+      
+      chrome.tabs.create({
+        url: "https://darkwind666.github.io/TimerExtensionSite/",
+      });
+    } else if (details.reason === chrome.runtime.OnInstalledReason.UPDATE) {
+      // When the extension is updated
+    } else if (details.reason === chrome.runtime.OnInstalledReason.CHROME_UPDATE) {
+      // When the browser is updated
+    } else if (details.reason === chrome.runtime.OnInstalledReason.SHARED_MODULE_UPDATE) {
+      // When a shared module is updated
+    }
+  
+    const UNINSTALL_URL = "https://docs.google.com/forms/d/e/1FAIpQLSeLf9FG8sh4CHsoGu2dY6-HNhYqdrhlZ97Q5QU8fFtsYC6SCQ/viewform?usp=sf_link";
+    chrome.runtime.setUninstallURL(UNINSTALL_URL);
+  
+  });
 }
