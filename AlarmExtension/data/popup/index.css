@@ -308,15 +308,15 @@ body[data-tab="stopwatch"] header h1:not([for="stopwatch"]) {
 body[data-tab="timer"] header h1:not([for="timer"]) {
   display: none;
 }
-header input[type=button] {
-  background: url('icons/plus.svg') center center no-repeat;
-  background-size: 26px;
-  filter: invert(100%);
-  width: 20px;
-  height: 20px;
-  cursor: pointer;
-  padding: 0;
+
+#plus {
+  position: absolute;
+  top: 50%;
+  left: 50%;
+  transform: translate(-50%, -50%);
+  background-color: var(--bg-pink-color);
 }
+
 body:not([data-tab="alarm"]) header input[type=button] {
   display: none;
 }
