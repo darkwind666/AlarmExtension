@@ -3,6 +3,9 @@
 const alarm = {};
 window.alarm = alarm;
 
+const placeholderImage = document.querySelector('.placeholderImage');
+placeholderImage.style.display = "none";
+
 alarm.format = (d, time = false) => {
   const day = ({
     0: 'Sun',
@@ -190,32 +193,26 @@ alarm.ms2time = duration => ({
   days: Math.floor((duration / (1000 * 60 * 60 * 24)))
 });
 
+function showPlaceholderImage() {
+  chrome.storage.local.get({
+    alarms: []
+  }, prefs => {
+
+    if (prefs.alarms.length) {
+      placeholderImage.style.display = "none";
+    } else {
+      placeholderImage.style.display = "flex";
+    }
+
+  });
+}
+
 alarm.toast = () => {
   chrome.runtime.sendMessage({
     method: 'get-alarms'
   }, alarms => {
     const times = alarms.map(o => o.scheduledTime);
-
-    const h1 = document.querySelector('.alarm [data-id="toast"] h1');
-    const h3 = document.querySelector('.alarm [data-id="toast"] h3');
-
-    if (times.length) {
-      times.sort();
-      const time = Date.now();
-      const delays = times.map(d => d - time);
-      const o = alarm.ms2time(delays[0]);
-      h1.textContent = `Next in ${o.days ? o.days + ' days ' : ''}${o.hours} hours ${o.minutes} minutes`;
-      h3.textContent = alarm.format(new Date(times[0]), true);
-    }
-    else {
-      if (document.querySelector('.entry')) {
-        h1.textContent = 'All alarms are off';
-      }
-      else {
-        h1.textContent = 'No alarm! Use plus button to create new ones';
-      }
-      h3.textContent = '';
-    }
+    showPlaceholderImage()
   });
 };
 
@@ -369,6 +366,7 @@ alarm.remove = target => {
       chrome.storage.local.set({
         alarms: prefs.alarms.filter(a => a.id.startsWith(entry.dataset.id) === false)
       });
+      showPlaceholderImage()
     });
   }
 };
