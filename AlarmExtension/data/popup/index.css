@@ -247,7 +247,7 @@ body {
   color: var(--color);
   background-color: var(--bg-color);
   width: var(--width);
-  height: 600px;
+  height: 400px;
 }
 html.pp body {
   height: 100vh;
@@ -311,7 +311,7 @@ body[data-tab="timer"] header h1:not([for="timer"]) {
 
 #plus {
   position: absolute;
-  top: 50%;
+  top: 80%;
   left: 50%;
   transform: translate(-50%, -50%);
   background-color: var(--bg-pink-color);
@@ -323,7 +323,7 @@ body[data-tab="timer"] header h1:not([for="timer"]) {
   left: 50%; */
   display: flex;
   justify-content: center;
-  padding-top: 100px;
+  padding-top: 120px;
 }
 
 .placeholderImage img {
@@ -489,6 +489,7 @@ body[data-alarm="view"] div[data-id="edit"] {
 }
 .alarm div[data-id="entries"] {
   overflow: auto;
+  height: 280px;
 }
 body[data-alarm="edit"] div[data-id="content"] {
   display: none;
@@ -505,32 +506,6 @@ body[data-alarm="edit"] div[data-id="content"] {
 }
 .alarm .entry [data-id=once]:empty {
   display: none;
-}
-
-.stopwatch {
-  flex-direction: column;
-}
-.stopwatch [data-id="content"] {
-  flex: 1;
-  overflow: auto;
-}
-.stopwatch table {
-  width: calc(100% - 40px);
-  text-align: center;
-  table-layout: fixed;
-}
-.stopwatch table td {
-  padding: 2px 0;
-}
-.stopwatch table td:first-child,
-.stopwatch table td:last-child {
-  color: var(--color-dark);
-}
-.stopwatch table td:first-child {
-  text-align: left;
-}
-.stopwatch table td:last-child {
-  text-align: right;
 }
 
 [data-id="tools"] {
@@ -553,35 +528,8 @@ input[type="button"][data-command="reset"],
 input[type="button"][data-command="lap"] {
   background-color: var(--bg-dark-color);
 }
-body[data-stopwatch="start"] .stopwatch input[type="button"]:not([data-command="start"]) {
-  display: none;
-}
-body[data-stopwatch="working"] .stopwatch input[type="button"]:not([data-command="lap"]):not([data-command="stop"]) {
-  display: none;
-}
-body[data-stopwatch="paused"] .stopwatch input[type="button"]:not([data-command="reset"]):not([data-command="resume"]) {
-  display: none;
-}
-.timer {
-  flex-direction: column;
-}
-.timer table {
-  width: 100%;
-  table-layout: fixed;
-}
-.timer td {
-  text-align: center;
-}
-.timer th {
-  color: var(--color-dark);
-  font-weight: normal;
-}
-.timer [data-id="presets"] div span {
-  flex: 1;
-  text-align: center;
-  color: var(--color-dark);
-  cursor: pointer;
-}
+
+
 body[data-timer="working"] [data-id="presets"] {
   display: none;
 }
