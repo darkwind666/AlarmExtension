@@ -447,6 +447,11 @@ body[data-tab="timer"] #content {
 .alarm div[data-id="edit"] {
   margin: 0 10px;
 }
+
+.editAlarmTime {
+  height: 100px;
+}
+
 .alarm div[data-id="current"] {
   padding: 10px 0;
 }
@@ -469,6 +474,11 @@ body[data-tab="timer"] #content {
   color: var(--color-pink);
   border-color: var(--color-pink);
 }
+
+.repeatAlarm {
+  margin-top: 20px;
+}
+
 .alarm table {
   width: 100%;
 }
@@ -479,6 +489,7 @@ body[data-tab="timer"] #content {
   outline: none;
   width: 100%;
   padding: 10px 5px;
+  margin-top: 20px;
   box-sizing: border-box;
 }
 body[data-alarm="view"] div[data-id="edit"] {

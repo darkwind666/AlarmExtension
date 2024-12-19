@@ -223,12 +223,12 @@ alarm.toast = () => {
 
   const edit = document.querySelector('.alarm [data-id="edit"]');
   const onchange = () => {
-    // updating toast
-    const current = document.querySelector('.alarm [data-id=current]');
+    
+    // const current = document.querySelector('.alarm [data-id=current]');
     const days = [...document.querySelectorAll('.alarm [data-id="edit"] [data-id="days"] input[type=checkbox]')]
       .filter(e => e.checked);
     if (days.length === 7) {
-      current.textContent = 'Every day';
+      // current.textContent = 'Every day';
     }
     else if (days.length > 1) {
       const map = {
@@ -240,7 +240,7 @@ alarm.toast = () => {
         5: 'Fri',
         6: 'Sat'
       };
-      current.textContent = days.map(e => map[e.value]).join(', ');
+      // current.textContent = days.map(e => map[e.value]).join(', ');
     }
     else {
       const times = alarm.convert({
@@ -253,15 +253,15 @@ alarm.toast = () => {
       const d = new Date(time);
       const t = new Date(n.getTime() + 24 * 60 * 60 * 1000);
 
-      if (d.getDate() === n.getDate()) {
-        current.textContent = 'Today - ' + alarm.format(d);
-      }
-      else if (d.getDate() === t.getDate()) {
-        current.textContent = 'Tomorrow - ' + alarm.format(d);
-      }
-      else {
-        current.textContent = alarm.format(d);
-      }
+      // if (d.getDate() === n.getDate()) {
+      //   current.textContent = 'Today - ' + alarm.format(d);
+      // }
+      // else if (d.getDate() === t.getDate()) {
+      //   current.textContent = 'Tomorrow - ' + alarm.format(d);
+      // }
+      // else {
+      //   current.textContent = alarm.format(d);
+      // }
     }
     if (days.length === 0) {
       document.querySelector('.alarm [data-id="edit"] [data-id="once"]').checked = true;
@@ -291,7 +291,7 @@ alarm.toast = () => {
         hours: Math.min(23, Math.max(0, Number(hours.value))),
         minutes: Math.min(59, Math.max(0, Number(minutes.value)))
       },
-      snooze: document.querySelector('.alarm [data-id="edit"] [data-id="snooze"]').checked,
+      // snooze: document.querySelector('.alarm [data-id="edit"] [data-id="snooze"]').checked,
       once: document.querySelector('.alarm [data-id="edit"] [data-id="once"]').checked,
       name: document.querySelector('.alarm [data-id="edit"] [data-id="name"]').value
     };
@@ -337,7 +337,7 @@ alarm.toast = () => {
     });
     hours.value = ('0' + o.time.hours).substr(-2);
     minutes.value = ('0' + o.time.minutes).substr(-2);
-    document.querySelector('.alarm [data-id="edit"] [data-id="snooze"]').checked = o.snooze;
+    // document.querySelector('.alarm [data-id="edit"] [data-id="snooze"]').checked = o.snooze;
     document.querySelector('.alarm [data-id="edit"] [data-id="once"]').checked = o.once;
     document.querySelector('.alarm [data-id="edit"]').dataset.assign = o.id;
     document.querySelector('.alarm [data-id="edit"]').dataset.restart = restart;
