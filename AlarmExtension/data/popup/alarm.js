@@ -145,16 +145,25 @@ const init = (callback = () => {}) => chrome.runtime.sendMessage({
   for (const o of prefs.alarms.sort((a, b) => {
     return a.time.hours * 60 + a.time.minutes - (b.time.hours * 60 + b.time.minutes);
   })) {
-    const {id, time, days} = o;
+    const {id, time, days, once} = o;
     const clone = document.importNode(t.content, true);
+    
     // time
     clone.querySelector('[data-id="time"]').textContent =
       ('0' + time.hours).substr(-2) + ':' +
       ('0' + time.minutes).substr(-2);
-    // next occurance
+    
+    // Handle once tag visibility
+    const onceSpan = clone.querySelector('[data-id="once"]');
+    onceSpan.textContent = once ? 'once' : '';
+    onceSpan.style.display = once ? '' : 'none'; // Hide if not once
+    
+    // next occurrence
     const times = alarm.convert(time, days);
     const date = clone.querySelector('[data-id="date"]');
-    if (days.length) {
+    
+    if (days.length > 1) {
+      // For multiple days selected, show only first letters
       const map = {
         0: 'S',
         1: 'M',
@@ -166,20 +175,44 @@ const init = (callback = () => {}) => chrome.runtime.sendMessage({
       };
       date.textContent = days.map(d => map[d]).join(' ');
       date.classList.add('range');
-    }
-    else {
+    } else if (once || days.length === 0 || days.length === 1) {
+      // For one-time alarms or single day selection, show full date
       date.textContent = alarm.format(new Date(times[0]));
+      date.classList.remove('range');
     }
+
     const entry = clone.querySelector('.entry');
     entry.times = times;
     entry.o = o;
     entry.dataset.id = id;
-    const active = alarms.some(a => a.name.startsWith(id));
-    entry.setAttribute('disabled', active === false);
-    clone.querySelector('input[type="checkbox"]').checked = active;
+    
+    // Set alarm as active by default
+    entry.setAttribute('disabled', false);
+    const checkbox = clone.querySelector('input[type="checkbox"]');
+    checkbox.checked = true;
+    
+    // Set up the alarm
+    const jobs = [];
+    let periodInMinutes = undefined;
+    if (!once && days.length > 0) {
+      periodInMinutes = 7 * 24 * 60;
+    }
 
-    entry.querySelector('[data-id="once"]').textContent = o.once ? 'once' : '';
+    times.forEach((when, index) => jobs.push({
+      method: 'set-alarm',
+      info: {
+        when,
+        periodInMinutes
+      },
+      name: id + ':' + index
+    }));
+
     entries.appendChild(clone);
+    
+    chrome.runtime.sendMessage({
+      method: 'batch',
+      jobs
+    });
   }
   alarm.toast();
   callback();
@@ -291,11 +324,10 @@ alarm.toast = () => {
         hours: Math.min(23, Math.max(0, Number(hours.value))),
         minutes: Math.min(59, Math.max(0, Number(minutes.value)))
       },
-      // snooze: document.querySelector('.alarm [data-id="edit"] [data-id="snooze"]').checked,
       once: document.querySelector('.alarm [data-id="edit"] [data-id="once"]').checked,
       name: document.querySelector('.alarm [data-id="edit"] [data-id="name"]').value
     };
-
+  
     const index = ids.indexOf(id);
     if (index === -1) {
       prefs.alarms.push(a);
@@ -308,9 +340,13 @@ alarm.toast = () => {
     }, () => {
       document.querySelector('.alarm div[data-id="entries"]').textContent = '';
       init(() => {
-        if (restart) {
-          const input = document.querySelector(`.alarm .entry[data-id="${id}"] input[type=checkbox]`);
-          input.dispatchEvent(new Event('change', {
+        // Find the newly created/edited alarm entry and set it as active
+        const entry = document.querySelector(`.alarm .entry[data-id="${id}"]`);
+        if (entry) {
+          const checkbox = entry.querySelector('input[type=checkbox]');
+          checkbox.checked = true;
+          // Trigger the change event to activate the alarm
+          checkbox.dispatchEvent(new Event('change', {
             bubbles: true
           }));
         }
@@ -318,6 +354,7 @@ alarm.toast = () => {
       document.body.dataset.alarm = 'view';
     });
   });
+
   alarm.edit = (o = {
     days: [],
     time: (() => {
@@ -332,23 +369,38 @@ alarm.toast = () => {
     id: 'alarm-' + Math.random(),
     name: ''
   }, restart = false) => {
-    [...document.querySelectorAll('.alarm [data-id="edit"] [data-id="days"] input[type=checkbox]')].forEach(e => {
-      e.checked = o.days.indexOf(Number(e.value)) !== -1;
-    });
+    // Get current weekday (0-6)
+    const currentDay = new Date().getDay();
+    
+    const dayCheckboxes = [...document.querySelectorAll('.alarm [data-id="edit"] [data-id="days"] input[type=checkbox]')];
+    
+    // If this is a new alarm (empty days array) and once is true
+    if (o.days.length === 0 && o.once) {
+      // Select only current day
+      dayCheckboxes.forEach(checkbox => {
+        checkbox.checked = Number(checkbox.value) === currentDay;
+      });
+    } else {
+      // For existing alarms, set days as stored
+      dayCheckboxes.forEach(e => {
+        e.checked = o.days.indexOf(Number(e.value)) !== -1;
+      });
+    }
+  
     hours.value = ('0' + o.time.hours).substr(-2);
     minutes.value = ('0' + o.time.minutes).substr(-2);
-    // document.querySelector('.alarm [data-id="edit"] [data-id="snooze"]').checked = o.snooze;
     document.querySelector('.alarm [data-id="edit"] [data-id="once"]').checked = o.once;
     document.querySelector('.alarm [data-id="edit"]').dataset.assign = o.id;
     document.querySelector('.alarm [data-id="edit"]').dataset.restart = restart;
     document.querySelector('.alarm [data-id="edit"] [data-id="name"]').value = o.name || '';
-
+  
     document.body.dataset.alarm = 'edit';
-
+  
     hours.dispatchEvent(new Event('change', {
       bubbles: true
     }));
   };
+
 }
 
 alarm.remove = target => {
@@ -386,3 +438,40 @@ chrome.storage.onChanged.addListener(ps => {
     alarm.toast();
   }
 });
+
+// Modify the once checkbox handler to update days selection
+document.querySelector('.alarm [data-id="edit"] [data-id="once"]').addEventListener('change', e => {
+  const dayCheckboxes = document.querySelectorAll('.alarm [data-id="edit"] [data-id="days"] input[type=checkbox]');
+  
+  if (e.target.checked) {
+    // When "Once" is checked, only select current day
+    const currentDay = new Date().getDay();
+    dayCheckboxes.forEach(checkbox => {
+      checkbox.checked = Number(checkbox.value) === currentDay;
+    });
+  } else {
+    // When "Once" is unchecked, select all days
+    dayCheckboxes.forEach(checkbox => {
+      checkbox.checked = true;
+    });
+  }
+});
+
+// Also modify the helper function for consistent behavior
+document.querySelector('.alarm [data-id="edit"] [data-id="once"]').onclick = e => {
+  const days = [...document.querySelectorAll('.alarm [data-id="edit"] [data-id="days"] input[type=checkbox]:checked')];
+  if (e.target.checked) {
+    // When checking "Once", clear all days except current
+    const currentDay = new Date().getDay();
+    for (const e of document.querySelectorAll('.alarm [data-id="edit"] [data-id="days"] input[type=checkbox]')) {
+      e.checked = Number(e.value) === currentDay;
+    }
+  } else {
+    // When unchecking "Once", select all days if none are selected
+    if (days.length === 0 || days.length === 1) {  // Also check if only one day is selected
+      for (const e of document.querySelectorAll('.alarm [data-id="edit"] [data-id="days"] input[type=checkbox]')) {
+        e.checked = true;
+      }
+    }
+  }
+};

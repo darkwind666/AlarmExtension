@@ -224,20 +224,31 @@ body[data-timer="paused"] .timer input[type="button"]:not([data-command="resume"
 }
 
 :root {
+  --mainNumbersColor: #ffa600;
   --header: #444548;
   --color: #fff;
-  --color-pink: #9a9dfc;
+  --color-pink: #e69500;
   --color-dark: #a0a0a0;
-  --bg-color: #2c2f32;
-  --bg-dark-color: #444548;
-  --bg-red-color: #692632;
-  --bg-pink-color: #66689e;
+  --bg-color: rgb(60, 60, 60);
+  --bg-dark-color: rgb(119, 118, 119);
+  --bg-red-color: #e69500;
+  --bg-pink-color: #e69500;
   --font-small: 12px;
   --font-medium: 22px;
   --font-normal: 15px;
   --font-large: 28px;
   --width: 400px;
+
+  /* --header: #444548;
+  --color: #fff;
+  --color-pink: #e69500;
+  --color-dark: #a0a0a0;
+  --bg-color: #2c2f32;
+  --bg-dark-color: #444548;
+  --bg-red-color: #692632;
+  --bg-pink-color: #66689e; */
 }
+
 html.pp {
   --width: 100vw;
 }
@@ -492,6 +503,11 @@ body[data-tab="timer"] #content {
   margin-top: 20px;
   box-sizing: border-box;
 }
+
+.alarm [data-id="name"]::placeholder {
+  color: var(--bg-color);
+}
+
 body[data-alarm="view"] div[data-id="edit"] {
   display: none;
 }
