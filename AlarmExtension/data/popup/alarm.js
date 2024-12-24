@@ -145,13 +145,15 @@ const init = (callback = () => {}) => chrome.runtime.sendMessage({
   for (const o of prefs.alarms.sort((a, b) => {
     return a.time.hours * 60 + a.time.minutes - (b.time.hours * 60 + b.time.minutes);
   })) {
-    const {id, time, days, once} = o;
+    const {id, time, days, once, name} = o;
     const clone = document.importNode(t.content, true);
     
     // time
     clone.querySelector('[data-id="time"]').textContent =
       ('0' + time.hours).substr(-2) + ':' +
       ('0' + time.minutes).substr(-2);
+
+    clone.querySelector('[data-id="AlarmName"]').textContent = name ? ` ${name}` : '';
     
     // Handle once tag visibility
     const onceSpan = clone.querySelector('[data-id="once"]');
