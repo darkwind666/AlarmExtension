@@ -237,7 +237,6 @@ body[data-tab="timer"] #content {
   align-items: center;
   gap: 15px;
   margin-bottom: 10px;
-  border-radius: 8px;
 }
 
 .alarm .entry .AlarmTime {
