@@ -99,9 +99,10 @@ input[type="button"] {
   cursor: pointer;
 }
 input[type="number"] {
-  font-size: var(--font-large);
+  /* font-size: var(--font-large); */
+  font-size: 30px;
   font-weight: 300;
-  color: var(--color);
+  color: var(--mainNumbersColor);
   background-color: transparent;
   border: none;
   text-align: center;
@@ -302,6 +303,9 @@ body[data-tab="timer"] #content {
 
 .editAlarmTime {
   height: 100px;
+  margin-left: 110px;
+  margin-right: 110px;
+  text-align: center;
 }
 
 .alarm div[data-id="current"] {
@@ -325,6 +329,10 @@ body[data-tab="timer"] #content {
 .alarm input:not(.switch)[type=checkbox]:checked::after {
   color: var(--color-pink);
   border-color: var(--color-pink);
+}
+
+.alarm div[data-id="days"] input[type=checkbox]:hover::after {
+  background-color: var(--bg-dark-color);
 }
 
 .repeatAlarm {
@@ -377,6 +385,10 @@ body[data-alarm="edit"] div[data-id="content"] {
   display: none;
 }
 
+.alarm .entry:hover {
+  background-color: var(--color-dark);
+}
+
 [data-id="tools"] {
   display: flex;
   justify-content: space-around;
@@ -398,6 +410,17 @@ input[type="button"][data-command="lap"] {
   background-color: var(--bg-dark-color);
 }
 
+#plus:hover {
+  background-color: #FF9F0A;
+}
+
+input[type="button"][data-command="cancel"]:hover {
+  background-color: #666566;
+}
+
+input[type="button"][data-command="save"]:hover {
+  background-color: #FF9F0A;
+}
 
 body[data-timer="working"] [data-id="presets"] {
   display: none;
