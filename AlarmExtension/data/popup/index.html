@@ -18,12 +18,12 @@
         </div>
         <template>
           <div class="entry" hbox align="center" disabled=true>
-            <span class="large" data-id="time">00:00</span>
-            <span class="medium" data-id="AlarmName"></span>
-            <span class="small" data-id="once">once</span>
-            <span class="small" data-id="date">Mon, 00 Aug</span>
-            <input type="checkbox" class="switch">
-            <input type="button" data-command="remove">
+            <span class="large AlarmTime" data-id="time">00:00</span>
+            <span class="medium AlarmName" data-id="AlarmName"></span>
+            <span class="small AlarmOnce" data-id="once">once</span>
+            <span class="small AlarmDate" data-id="date">Mon, 00 Aug</span>
+            <input type="checkbox" class="switch AlarmSwitch">
+            <input type="button" class="switch AlarmRemoveButton" data-command="remove">
           </div>
         </template>
         <div data-id="entries" flex="1"></div>

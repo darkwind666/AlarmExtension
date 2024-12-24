@@ -232,7 +232,34 @@ body[data-tab="timer"] #content {
   background-color: var(--bg-dark-color);
   padding: 20px 30px;
   position: relative;
+
+  display: flex;
+  align-items: center;
+  gap: 15px;
+  margin-bottom: 10px;
+  border-radius: 8px;
 }
+
+.alarm .entry .AlarmTime {
+  min-width: 100px;
+}
+
+.alarm .entry .AlarmName {
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  margin: 0 -20px;
+}
+
+.alarm .entry .AlarmOnce,
+.alarm .entry .AlarmDate {
+  min-width: fit-content;
+}
+
+.alarm .entry .switch {
+  margin-left: auto;
+}
+
 .alarm .entry [data-id="time"] {
   flex: 1;
   font-weight: 300;
