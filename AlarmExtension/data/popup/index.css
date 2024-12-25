@@ -298,7 +298,7 @@ body[data-tab="timer"] #content {
 
 /* alarm settings */
 .alarm div[data-id="edit"] {
-  margin: 0 10px;
+  padding: 0 10px;
 }
 
 .editAlarmTime {
@@ -306,6 +306,10 @@ body[data-tab="timer"] #content {
   margin-left: 110px;
   margin-right: 110px;
   text-align: center;
+}
+
+.editAlarmTime table {
+  margin-left: 20px;
 }
 
 .alarm div[data-id="current"] {
@@ -393,7 +397,6 @@ body[data-alarm="edit"] div[data-id="content"] {
   display: flex;
   justify-content: space-around;
   align-items: unset;
-  width: var(--width);
 }
 input[type="button"][data-command="save"],
 input[type="button"][data-command="resume"],
