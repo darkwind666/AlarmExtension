@@ -425,8 +425,7 @@ alarm.remove = target => {
   }
 };
 
-// edit from entry
-document.querySelector('.alarm div[data-id="content"]').addEventListener('dblclick', ({target}) => {
+document.querySelector('.alarm div[data-id="content"]').addEventListener('click', ({target}) => {
   const entry = target.closest('.entry');
   if (entry && target.classList.contains('switch') === false) {
     const active = entry.querySelector('.switch').checked;
@@ -477,3 +476,47 @@ document.querySelector('.alarm [data-id="edit"] [data-id="once"]').onclick = e =
     }
   }
 };
+
+const minutes = document.querySelector('.alarm input[data-id="minutes"]');
+const hours = document.querySelector('.alarm input[data-id="hours"]');
+
+minutes.addEventListener('wheel', function(event) {
+  event.preventDefault();
+
+  if (event.deltaY < 0) {
+    minutes.stepUp(); 
+  } else if (event.deltaY > 0) {
+    minutes.stepDown();
+  }
+
+  fix(event, 0, 59)
+
+});
+
+hours.addEventListener('wheel', function(event) {
+  event.preventDefault();
+
+  if (event.deltaY < 0) {
+    hours.stepUp(); 
+  } else if (event.deltaY > 0) {
+    hours.stepDown();
+  }
+
+  fix(event, 0, 23)
+
+});
+
+const fix = (e, min = 0, max = 23) => {
+  e.target.value = Math.max(min, Math.min(max, e.target.valueAsNumber)).toString().padStart(2, '0');
+};
+
+window.addEventListener('keydown', async ev => {
+  if(ev.code === 'Enter' || ev.code === 'NumpadEnter' || ev.code === 'Space') {
+
+    if (document.body.dataset.alarm === 'view') {
+      alarm.edit();
+    } else {
+      alarm.save();
+    }
+  }
+})
