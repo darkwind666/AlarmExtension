@@ -43,15 +43,6 @@
   --font-normal: 15px;
   --font-large: 28px;
   --width: 400px;
-
-  /* --header: #444548;
-  --color: #fff;
-  --color-pink: #e69500;
-  --color-dark: #a0a0a0;
-  --bg-color: #2c2f32;
-  --bg-dark-color: #444548;
-  --bg-red-color: #692632;
-  --bg-pink-color: #66689e; */
 }
 
 html.pp {
@@ -99,31 +90,12 @@ input[type="button"] {
   cursor: pointer;
 }
 input[type="number"] {
-  /* font-size: var(--font-large); */
   font-size: 30px;
   font-weight: 300;
   color: var(--mainNumbersColor);
   background-color: transparent;
   border: none;
   text-align: center;
-}
-header {
-  padding: 10px;
-  background-color: var(--header);
-}
-header h1 {
-  display: inline-block;
-  flex: 1;
-  margin: 0;
-}
-body[data-tab="alarm"] header h1:not([for="alarm"]) {
-  display: none;
-}
-body[data-tab="stopwatch"] header h1:not([for="stopwatch"]) {
-  display: none;
-}
-body[data-tab="timer"] header h1:not([for="timer"]) {
-  display: none;
 }
 
 #plus {
@@ -135,9 +107,6 @@ body[data-tab="timer"] header h1:not([for="timer"]) {
 }
 
 .placeholderImage {
-  /* position: absolute;
-  top: 50%;
-  left: 50%; */
   display: flex;
   justify-content: center;
   padding-top: 120px;
@@ -153,31 +122,6 @@ body:not([data-tab="alarm"]) header input[type=button] {
 }
 body[data-tab="alarm"][data-alarm="edit"] header input[type=button] {
   display: none;
-}
-
-footer {
-  justify-content: space-around;
-  padding: 15px 0;
-  background-color: var(--header);
-}
-footer input[type=radio] {
-  display: none;
-}
-footer > label {
-  position: relative;
-  padding: 3px 0;
-  cursor: pointer;
-}
-footer > input[type=radio]:checked + label {
-  color: var(--color-pink);
-}
-footer > input[type=radio]:checked + label::before {
-  content: '';
-  width: 100%;
-  position: absolute;
-  left: 0;
-  bottom: 0;
-  border-bottom: dotted 2px var(--color-pink);
 }
 
 input[type=checkbox].switch {
@@ -296,7 +240,6 @@ body[data-tab="timer"] #content {
   padding: 0;
 }
 
-/* alarm settings */
 .alarm div[data-id="edit"] {
   padding: 0 10px;
 }
@@ -398,18 +341,11 @@ body[data-alarm="edit"] div[data-id="content"] {
   justify-content: space-around;
   align-items: unset;
 }
-input[type="button"][data-command="save"],
-input[type="button"][data-command="resume"],
-input[type="button"][data-command="start"] {
+input[type="button"][data-command="save"] {
   background-color: var(--bg-pink-color);
 }
-input[type="button"][data-command="pause"],
-input[type="button"][data-command="stop"] {
-  background-color: var(--bg-red-color);
-}
-input[type="button"][data-command="cancel"],
-input[type="button"][data-command="reset"],
-input[type="button"][data-command="lap"] {
+
+input[type="button"][data-command="cancel"] {
   background-color: var(--bg-dark-color);
 }
 
@@ -423,19 +359,6 @@ input[type="button"][data-command="cancel"]:hover {
 
 input[type="button"][data-command="save"]:hover {
   background-color: #FF9F0A;
-}
-
-body[data-timer="working"] [data-id="presets"] {
-  display: none;
-}
-body[data-timer="start"] .timer input[type="button"]:not([data-command="start"]) {
-  display: none;
-}
-body[data-timer="working"] .timer input[type="button"]:not([data-command="pause"]):not([data-command="cancel"]) {
-  display: none;
-}
-body[data-timer="paused"] .timer input[type="button"]:not([data-command="resume"]):not([data-command="cancel"]) {
-  display: none;
 }
 
 [hbox] {
