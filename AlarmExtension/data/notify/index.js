@@ -1,4 +1,4 @@
-import Analytics from '../../google-analytics.js';
+// import Analytics from '../../google-analytics.js';
 
 const args = new URLSearchParams(location.search);
 
@@ -15,7 +15,7 @@ chrome.runtime.sendMessage({
   position: args.get('position')
 }, () => chrome.runtime.lastError);
 
-Analytics.fireEvent('showNotification')
+// Analytics.fireEvent('showNotification')
 
 document.getElementById('snooze').onclick = () => {
   const buttonIndex = document.getElementById('range').selectedIndex + 1;

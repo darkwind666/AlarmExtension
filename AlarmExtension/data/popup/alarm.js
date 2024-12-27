@@ -187,34 +187,12 @@ const init = (callback = () => {}) => chrome.runtime.sendMessage({
     entry.times = times;
     entry.o = o;
     entry.dataset.id = id;
-    
-    // Set alarm as active by default
-    entry.setAttribute('disabled', false);
-    const checkbox = clone.querySelector('input[type="checkbox"]');
-    checkbox.checked = true;
-    
-    // Set up the alarm
-    const jobs = [];
-    let periodInMinutes = undefined;
-    if (!once && days.length > 0) {
-      periodInMinutes = 7 * 24 * 60;
-    }
+    const active = alarms.some(a => a.name.startsWith(id));
+    entry.setAttribute('disabled', active === false);
+    clone.querySelector('input[type="checkbox"]').checked = active;
 
-    times.forEach((when, index) => jobs.push({
-      method: 'set-alarm',
-      info: {
-        when,
-        periodInMinutes
-      },
-      name: id + ':' + index
-    }));
-
+    // entry.querySelector('[data-id="once"]').textContent = o.once ? 'once' : '';
     entries.appendChild(clone);
-    
-    chrome.runtime.sendMessage({
-      method: 'batch',
-      jobs
-    });
   }
   alarm.toast();
   callback();
