@@ -326,7 +326,7 @@ chrome.storage.onChanged.addListener(ps => {
       // Analytics.fireEvent('install');
       
       chrome.tabs.create({
-        url: "https://darkwind666.github.io/TimerExtensionSite/",
+        url: "https://darkwind666.github.io/AlarmExtensionSite/",
       });
     } else if (details.reason === chrome.runtime.OnInstalledReason.UPDATE) {
       // When the extension is updated
@@ -336,7 +336,7 @@ chrome.storage.onChanged.addListener(ps => {
       // When a shared module is updated
     }
   
-    const UNINSTALL_URL = "https://docs.google.com/forms/d/e/1FAIpQLSeLf9FG8sh4CHsoGu2dY6-HNhYqdrhlZ97Q5QU8fFtsYC6SCQ/viewform?usp=sf_link";
+    const UNINSTALL_URL = "https://docs.google.com/forms/d/e/1FAIpQLScVKjhp2x3d7fTfPm9t-9Yy3qwWG_kehxz4ibwh9hvxmKC-vg/viewform?usp=sharing";
     chrome.runtime.setUninstallURL(UNINSTALL_URL);
   
   });
