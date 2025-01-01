@@ -1,5 +1,7 @@
 'use strict';
 
+import Analytics from "./google-analytics.js";
+
 const notifications = {
   clear(name, c) {
     chrome.runtime.sendMessage({
@@ -323,7 +325,7 @@ chrome.storage.onChanged.addListener(ps => {
     
     if (details.reason === chrome.runtime.OnInstalledReason.INSTALL) {
       
-      // Analytics.fireEvent('install');
+      Analytics.fireEvent('install');
       
       chrome.tabs.create({
         url: "https://darkwind666.github.io/AlarmExtensionSite/",

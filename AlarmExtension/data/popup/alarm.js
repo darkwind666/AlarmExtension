@@ -1,5 +1,7 @@
 'use strict';
 
+import Analytics from '../../google-analytics.js';
+
 const alarm = {};
 window.alarm = alarm;
 
@@ -37,6 +39,11 @@ document.getElementById('plus').addEventListener('click', () => {
   alarm.edit();
 });
 
+document.querySelector('.placeholderImage img').addEventListener('click', () => {
+  alarm.edit();
+});
+
+
 document.addEventListener('click', e => {
   const {command} = e.target.dataset;
 
@@ -51,6 +58,8 @@ document.addEventListener('click', e => {
   }
 
 });
+
+Analytics.fireEvent('showPopup')
 
 // helper function to check all days or uncheck all days based on once button
 document.querySelector('.alarm [data-id="edit"] [data-id="once"]').onclick = e => {
