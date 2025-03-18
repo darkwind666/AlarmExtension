@@ -9,30 +9,58 @@ const placeholderImage = document.querySelector('.placeholderImage');
 placeholderImage.style.display = "none";
 
 alarm.format = (d, time = false) => {
-  const day = ({
-    0: 'Sun',
-    1: 'Mon',
-    2: 'Tue',
-    3: 'Wed',
-    4: 'Thu',
-    5: 'Fri',
-    6: 'Sat'
-  })[d.getDay()] + ', ' + ('0' + d.getDate()).substr(-2) + ' ' + ({
-    0: 'Jan',
-    1: 'Feb',
-    2: 'Mar',
-    3: 'Apr',
-    4: 'May',
-    5: 'Jun',
-    6: 'Jul',
-    7: 'Aug',
-    8: 'Sep',
-    9: 'Oct',
-    10: 'Nov',
-    11: 'Dec'
-  })[d.getMonth()];
-
-  return day + (time ? ' ' + ('0' + d.getHours()).substr(-2) + ':' + ('0' + d.getMinutes()).substr(-2) : '');
+  return new Promise(resolve => {
+    chrome.storage.local.get({ 'timeFormat': '24h' }, prefs => {
+      const day = ({
+        0: 'Sun',
+        1: 'Mon',
+        2: 'Tue',
+        3: 'Wed',
+        4: 'Thu',
+        5: 'Fri',
+        6: 'Sat'
+      })[d.getDay()] + ', ' + ('0' + d.getDate()).substr(-2) + ' ' + ({
+        0: 'Jan',
+        1: 'Feb',
+        2: 'Mar',
+        3: 'Apr',
+        4: 'May',
+        5: 'Jun',
+        6: 'Jul',
+        7: 'Aug',
+        8: 'Sep',
+        9: 'Oct',
+        10: 'Nov',
+        11: 'Dec'
+      })[d.getMonth()];
+      
+      if (time) {
+        let hours = d.getHours();
+        let ampm = '';
+        
+        if (prefs.timeFormat === 'am') {
+          // Force AM format
+          if (hours >= 12) {
+            hours = hours - 12;
+          }
+          if (hours === 0) hours = 12;
+          ampm = ' AM';
+        } else if (prefs.timeFormat === 'pm') {
+          // Force PM format
+          if (hours < 12) {
+            hours = hours + 12;
+          }
+          hours = hours - 12;
+          if (hours === 0) hours = 12;
+          ampm = ' PM';
+        }
+        
+        resolve(day + ' ' + ('0' + hours).substr(-2) + ':' + ('0' + d.getMinutes()).substr(-2) + ampm);
+      } else {
+        resolve(day);
+      }
+    });
+  });
 };
 
 document.getElementById('plus').addEventListener('click', () => {
@@ -146,7 +174,8 @@ alarm.convert = (time, ds) => {
 const init = (callback = () => {}) => chrome.runtime.sendMessage({
   method: 'get-alarms'
 }, alarms => chrome.storage.local.get({
-  'alarms': []
+  'alarms': [],
+  'timeFormat': '24h'
 }, prefs => {
   const t = document.querySelector('.alarm template');
   const entries = document.querySelector('.alarm div[data-id="entries"]');
@@ -154,12 +183,30 @@ const init = (callback = () => {}) => chrome.runtime.sendMessage({
   for (const o of prefs.alarms.sort((a, b) => {
     return a.time.hours * 60 + a.time.minutes - (b.time.hours * 60 + b.time.minutes);
   })) {
-    const {id, time, days, once, name} = o;
+    const {id, time, days, once, name, timeFormat = prefs.timeFormat} = o;
     const clone = document.importNode(t.content, true);
     
-    // time
+    // Handle time display based on format
+    let displayHours = time.hours;
+    let ampm = '';
+    
+    if (timeFormat === 'am') {
+      if (time.hours >= 12) {
+        displayHours = time.hours % 12;
+      }
+      if (displayHours === 0) displayHours = 12;
+      ampm = ' AM';
+    } else if (timeFormat === 'pm') {
+      if (time.hours < 12) {
+        displayHours = time.hours + 12;
+      }
+      displayHours = displayHours % 12;
+      if (displayHours === 0) displayHours = 12;
+      ampm = ' PM';
+    }
+
     clone.querySelector('[data-id="time"]').textContent =
-      ('0' + time.hours).substr(-2) + ':' +
+      ('0' + displayHours).substr(-2) + ':' +
       ('0' + time.minutes).substr(-2);
 
     clone.querySelector('[data-id="AlarmName"]').textContent = name ? ` ${name}` : '';
@@ -169,12 +216,12 @@ const init = (callback = () => {}) => chrome.runtime.sendMessage({
     onceSpan.textContent = once ? 'once' : '';
     onceSpan.style.display = once ? '' : 'none'; // Hide if not once
     
-    // next occurrence
+    // rest of the function remains the same...
+    
     const times = alarm.convert(time, days);
     const date = clone.querySelector('[data-id="date"]');
     
     if (days.length > 1) {
-      // For multiple days selected, show only first letters
       const map = {
         0: 'S',
         1: 'M',
@@ -187,8 +234,57 @@ const init = (callback = () => {}) => chrome.runtime.sendMessage({
       date.textContent = days.map(d => map[d]).join(' ');
       date.classList.add('range');
     } else if (once || days.length === 0 || days.length === 1) {
-      // For one-time alarms or single day selection, show full date
-      date.textContent = alarm.format(new Date(times[0]));
+      // Create a custom formatDate function to use the entry's timeFormat
+      const formatDate = (d) => {
+        const day = ({
+          0: 'Sun',
+          1: 'Mon',
+          2: 'Tue',
+          3: 'Wed',
+          4: 'Thu',
+          5: 'Fri',
+          6: 'Sat'
+        })[d.getDay()] + ', ' + ('0' + d.getDate()).substr(-2) + ' ' + ({
+          0: 'Jan',
+          1: 'Feb',
+          2: 'Mar',
+          3: 'Apr',
+          4: 'May',
+          5: 'Jun',
+          6: 'Jul',
+          7: 'Aug',
+          8: 'Sep',
+          9: 'Oct',
+          10: 'Nov',
+          11: 'Dec'
+        })[d.getMonth()];
+        
+        let hours = d.getHours();
+        let ampm = '';
+        
+        if (timeFormat === 'am') {
+          // Force AM format
+          if (hours >= 12) {
+            hours = hours - 12;
+          }
+          if (hours === 0) hours = 12;
+          ampm = ' AM';
+        } else if (timeFormat === 'pm') {
+          // Force PM format
+          if (hours < 12) {
+            hours = hours + 12;
+          }
+          hours = hours - 12;
+          if (hours === 0) hours = 12;
+          ampm = ' PM';
+        }
+        
+        return day + ' ' + ('0' + hours).substr(-2) + ':' + ('0' + d.getMinutes()).substr(-2) + ampm;
+      };
+
+      // Use the entry's specific timeFormat
+      const dateString = formatDate(new Date(times[0]));
+      date.textContent = dateString;
       date.classList.remove('range');
     }
 
@@ -200,7 +296,6 @@ const init = (callback = () => {}) => chrome.runtime.sendMessage({
     entry.setAttribute('disabled', active === false);
     clone.querySelector('input[type="checkbox"]').checked = active;
 
-    // entry.querySelector('[data-id="once"]').textContent = o.once ? 'once' : '';
     entries.appendChild(clone);
   }
   alarm.toast();
@@ -300,21 +395,43 @@ alarm.toast = () => {
   minutes.addEventListener('change', e => fix(e, 0, 59));
 
   alarm.save = () => chrome.storage.local.get({
-    alarms: []
+    alarms: [],
+    timeFormat: '24h'
   }, prefs => {
     const id = document.querySelector('.alarm [data-id="edit"]').dataset.assign;
     const restart = document.querySelector('.alarm [data-id="edit"]').dataset.restart === 'true';
     const ids = prefs.alarms.map(a => a.id);
+    
+    // Get the selected time format from the UI
+    const selectedTimeFormat = document.querySelector('.alarm [data-id="edit"] [data-id="timeFormat"]').value;
+    chrome.storage.local.set({ 'timeFormat': selectedTimeFormat });
+    
+    let hours = Math.min(23, Math.max(0, Number(document.querySelector('.alarm [data-id="edit"] [data-id="hours"]').value)));
+    let minutes = Math.min(59, Math.max(0, Number(document.querySelector('.alarm [data-id="edit"] [data-id="minutes"]').value)));
+    
+    // Convert from AM/PM if needed
+    if (selectedTimeFormat === 'am') {
+      // For AM format
+      if (hours === 12) {
+        // 12 AM is stored as 0 in 24-hour format
+        hours = 0;
+      }
+    } else if (selectedTimeFormat === 'pm') {
+      // For PM format
+      if (hours < 12) {
+        // Add 12 to convert PM times to 24-hour format
+        hours += 12;
+      }
+    }
+    
     const a = {
       id,
       days: [...document.querySelectorAll('.alarm [data-id="edit"] [data-id="days"] input[type=checkbox]')]
         .filter(e => e.checked).map(e => Number(e.value)),
-      time: {
-        hours: Math.min(23, Math.max(0, Number(hours.value))),
-        minutes: Math.min(59, Math.max(0, Number(minutes.value)))
-      },
+      time: { hours, minutes },
       once: document.querySelector('.alarm [data-id="edit"] [data-id="once"]').checked,
-      name: document.querySelector('.alarm [data-id="edit"] [data-id="name"]').value
+      name: document.querySelector('.alarm [data-id="edit"] [data-id="name"]').value,
+      timeFormat: selectedTimeFormat // Store the selected format with the alarm
     };
   
     const index = ids.indexOf(id);
@@ -356,7 +473,8 @@ alarm.toast = () => {
     snooze: false,
     once: true,
     id: 'alarm-' + Math.random(),
-    name: ''
+    name: '',
+    // No default here, we'll handle defaults in the cascade logic
   }, restart = false) => {
     // Get current weekday (0-6)
     const currentDay = new Date().getDay();
@@ -375,19 +493,97 @@ alarm.toast = () => {
         e.checked = o.days.indexOf(Number(e.value)) !== -1;
       });
     }
-  
-    hours.value = ('0' + o.time.hours).substr(-2);
-    minutes.value = ('0' + o.time.minutes).substr(-2);
-    document.querySelector('.alarm [data-id="edit"] [data-id="once"]').checked = o.once;
-    document.querySelector('.alarm [data-id="edit"]').dataset.assign = o.id;
-    document.querySelector('.alarm [data-id="edit"]').dataset.restart = restart;
-    document.querySelector('.alarm [data-id="edit"] [data-id="name"]').value = o.name || '';
-  
-    document.body.dataset.alarm = 'edit';
-  
-    hours.dispatchEvent(new Event('change', {
-      bubbles: true
-    }));
+
+    const getSystemTimeFormat = () => {
+      // First check if the system uses 12-hour format at all
+      const locale = navigator.language
+      // const locale = 'en-GB'
+      const is12Hour = new Intl.DateTimeFormat(locale, {
+        hour: 'numeric',
+        hour12: true
+      }).format(new Date(2020, 0, 1, 13)).includes('PM');
+      
+      if (!is12Hour) {
+        // System uses 24-hour format
+        return '24h';
+      }
+      
+      // System uses 12-hour format, now check if current time is AM or PM
+      const currentHour = new Date().getHours();
+      
+      // If current hour is 12 or greater (up to 23), it's PM time
+      if (currentHour >= 12) {
+        return 'pm';
+      } else {
+        return 'am';
+      }
+    };
+    
+    // Get user's stored time format preference with system fallback
+    chrome.storage.local.get({ 'timeFormat': getSystemTimeFormat() }, prefs => {
+      // Cascade: 1. Entry format, 2. User preference, 3. System format
+      // let format = o.timeFormat || prefs.timeFormat;
+      let format = '24h'
+
+      if (o.timeFormat) {
+        format = o.timeFormat
+      } else {
+        if (prefs.timeFormat === '24h') {
+          format = prefs.timeFormat
+        } else {
+          const currentHour = new Date().getHours();
+          if (currentHour >= 12) {
+            format = "pm";
+          } else {
+            format = "am";
+          }
+        }
+      }
+
+      const timeFormatSelector = document.querySelector('.alarm [data-id="edit"] [data-id="timeFormat"]');
+      
+      // Set the format selector to the determined format
+      timeFormatSelector.value = format;
+      
+      // Calculate display hours based on format
+      let displayHours = o.time.hours;
+      if (format === 'am') {
+        // For AM format
+        if (o.time.hours >= 12) {
+          displayHours = o.time.hours % 12;
+        }
+        if (displayHours === 0) displayHours = 12;
+      } else if (format === 'pm') {
+        // For PM format
+        displayHours = o.time.hours % 12;
+        if (displayHours === 0) displayHours = 12;
+      }
+      
+      const hours = document.querySelector('.alarm [data-id="edit"] [data-id="hours"]');
+      const minutes = document.querySelector('.alarm [data-id="edit"] [data-id="minutes"]');
+      
+      hours.value = ('0' + displayHours).substr(-2);
+      minutes.value = ('0' + o.time.minutes).substr(-2);
+      
+      document.querySelector('.alarm [data-id="edit"] [data-id="once"]').checked = o.once;
+      document.querySelector('.alarm [data-id="edit"]').dataset.assign = o.id;
+      document.querySelector('.alarm [data-id="edit"]').dataset.restart = restart;
+      document.querySelector('.alarm [data-id="edit"] [data-id="name"]').value = o.name || '';
+    
+      document.body.dataset.alarm = 'edit';
+    
+      hours.dispatchEvent(new Event('change', {
+        bubbles: true
+      }));
+      
+      // Update time format indicators (AM/PM/24h) if you have this function
+      if (typeof updateTimeInputs === 'function') {
+        updateTimeInputs(format);
+      }
+      
+      // Store the format in a data attribute for later use when saving
+      document.querySelector('.alarm [data-id="edit"]').dataset.timeFormat = format;
+    });
   };
 
 }
@@ -482,23 +678,40 @@ minutes.addEventListener('wheel', function(event) {
 
 hours.addEventListener('wheel', function(event) {
   event.preventDefault();
-
-  if (event.deltaY < 0) {
-    hours.stepUp(); 
-  } else if (event.deltaY > 0) {
-    hours.stepDown();
-  }
-
-  fix(event, 0, 23)
-
+  
+  chrome.storage.local.get({ 'timeFormat': '24h' }, prefs => {
+    const min = (prefs.timeFormat === 'am' || prefs.timeFormat === 'pm') ? 1 : 0;
+    const max = (prefs.timeFormat === 'am' || prefs.timeFormat === 'pm') ? 12 : 23;
+    
+    if (event.deltaY < 0) {
+      hours.stepUp();
+    } else if (event.deltaY > 0) {
+      hours.stepDown();
+    }
+    
+    fix(event, min, max);
+  });
 });
 
-const fix = (e, min = 0, max = 23) => {
+// const fix = (e, min = 0, max = 23) => {
+//   e.target.value = Math.max(min, Math.min(max, e.target.valueAsNumber)).toString().padStart(2, '0');
+// };
+
+const fix = (e, min, max) => {
+
+  if ((selectedTimeFormat === 'am' || selectedTimeFormat === 'pm') && e.target.dataset.id === 'hours') {
+    min = 1;
+    max = 12;
+  } else if (selectedTimeFormat === '24h' && e.target.dataset.id === 'hours') {
+    min = 0;
+    max = 23;
+  }
+  
   e.target.value = Math.max(min, Math.min(max, e.target.valueAsNumber)).toString().padStart(2, '0');
 };
 
 window.addEventListener('keydown', async ev => {
-  if(ev.code === 'Enter' || ev.code === 'NumpadEnter' || ev.code === 'Space') {
+  if(ev.code === 'Enter' || ev.code === 'NumpadEnter') {
 
     if (document.body.dataset.alarm === 'view') {
       alarm.edit();
@@ -507,3 +720,87 @@ window.addEventListener('keydown', async ev => {
     }
   }
 })
+
+// Add timeFormat to storage
+const timeFormatSelector = document.querySelector('.alarm [data-id="edit"] [data-id="timeFormat"]');
+
+// Initialize time format from storage
+chrome.storage.local.get({ 'timeFormat': '24h' }, prefs => {
+  timeFormatSelector.value = prefs.timeFormat;
+  updateTimeInputs(prefs.timeFormat);
+});
+
+// Update time inputs when format changes
+timeFormatSelector.addEventListener('change', () => {
+  const format = timeFormatSelector.value;
+  // chrome.storage.local.set({ 'timeFormat': format });
+  updateTimeInputs(format);
+});
+
+// Function to update time inputs based on format
+function updateTimeInputs(format) {
+  const hoursInput = document.querySelector('.alarm [data-id="edit"] [data-id="hours"]');
+  
+  if (format === 'am' || format === 'pm') {
+    // Set range for 12-hour format (1-12)
+    hoursInput.min = 1;
+    hoursInput.max = 12;
+    
+    // Make sure current value is within range
+    let currentHour = hoursInput.valueAsNumber;
+    
+    if (currentHour === 0) {
+      hoursInput.value = '12'; // 0 hours in 24h = 12 AM
+    } else if (currentHour > 12) {
+      // Convert from 24h to 12h
+      hoursInput.value = (currentHour - 12).toString().padStart(2, '0');
+    }
+  } else {
+    // Set range for 24-hour format (0-23)
+    hoursInput.min = 0;
+    hoursInput.max = 23;
+    
+    // Convert from 12h to 24h if needed
+    let currentHour = hoursInput.valueAsNumber;
+    
+    if (format === '24h' && timeFormatSelector.previousValue === 'pm' && currentHour < 12) {
+      hoursInput.value = (currentHour + 12).toString().padStart(2, '0');
+    } else if (format === '24h' && timeFormatSelector.previousValue === 'am' && currentHour === 12) {
+      hoursInput.value = '00';
+    }
+  }
+  
+  // Store the previous value for next conversion
+  timeFormatSelector.previousValue = format;
+}
+
+// Convert time to 24-hour format for storage
+function convertTo24Hour(hours, format) {
+  let hours24 = parseInt(hours, 10);
+  
+  if (format === 'pm' && hours24 < 12) {
+    hours24 += 12;
+  } else if (format === 'am' && hours24 === 12) {
+    hours24 = 0;
+  }
+  
+  return hours24;
+}
+
+// Convert from 24-hour to display format
+function convertFrom24Hour(hours24, format) {
+  if (format === '24h') {
+    return hours24;
+  }
+  
+  // For both AM and PM formats, convert to 12-hour
+  let hours12 = hours24 % 12;
+  if (hours12 === 0) hours12 = 12;
+  
+  // If requested format is PM but time is AM, or requested format is AM but time is PM,
+  // we need to adjust the format
+  const actualFormat = hours24 >= 12 ? 'pm' : 'am';
+  
+  // Return just the hours value, as the format is determined by the selector
+  return hours12;
+}

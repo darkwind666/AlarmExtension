@@ -185,14 +185,14 @@ body[data-tab="timer"] #content {
 }
 
 .alarm .entry .AlarmTime {
-  min-width: 100px;
+  min-width: 120px;
 }
 
 .alarm .entry .AlarmName {
   white-space: nowrap;
   overflow: hidden;
   text-overflow: ellipsis;
-  margin: 0 -20px;
+  margin: 0 -50px;
 }
 
 .alarm .entry .AlarmOnce,
@@ -245,7 +245,7 @@ body[data-tab="timer"] #content {
 }
 
 .editAlarmTime {
-  height: 100px;
+  height: 70px;
   margin-left: 110px;
   margin-right: 110px;
   text-align: center;
@@ -400,5 +400,53 @@ input[type="button"][data-command="save"]:hover {
 
 .large[data-id="time"],
 .large[data-id="AlarmName"] {
+  text-align: center;
+}
+
+.time-format-container {
+  display: flex;
+  justify-content: center;
+  margin: 0px 0px 10px 0px;
+}
+
+/* Hide the default select appearance */
+select[data-id="timeFormat"] {
+  appearance: none;
+  -webkit-appearance: none;
+  -moz-appearance: none;
+  background-color: transparent;
+  border: none;
+  padding: 0;
+  margin: 0;
+  width: auto;
+  color: var(--color);
+  font-family: 'Open Sans', sans-serif;
+  font-size: var(--font-normal);
+  cursor: pointer;
+  position: relative;
+  text-align: center;
+  outline: none;
+}
+
+/* Create a custom display for the selected option */
+select[data-id="timeFormat"]::before {
+  content: attr(data-display);
+  position: absolute;
+  width: 28px;
+  height: 28px;
+  left: 50%;
+  transform: translateX(-50%);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  border-radius: 50%;
+  border: solid 1px var(--color-pink);
+  color: var(--color-pink);
+}
+
+/* Style for the options when dropdown is open */
+select[data-id="timeFormat"] option {
+  background-color: var(--bg-dark-color);
+  color: var(--color);
   text-align: center;
 }
