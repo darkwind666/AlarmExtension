@@ -89,21 +89,6 @@ document.addEventListener('click', e => {
 
 Analytics.fireEvent('showPopup')
 
-// helper function to check all days or uncheck all days based on once button
-document.querySelector('.alarm [data-id="edit"] [data-id="once"]').onclick = e => {
-  const days = [...document.querySelectorAll('.alarm [data-id="edit"] [data-id="days"] input[type=checkbox]:checked')];
-  if (e.target.checked === false && days.length === 0) {
-    for (const e of document.querySelectorAll('.alarm [data-id="edit"] [data-id="days"] input[type=checkbox]')) {
-      e.checked = true;
-    }
-  }
-  if (e.target.checked) {
-    for (const e of document.querySelectorAll('.alarm [data-id="edit"] [data-id="days"] input[type=checkbox]')) {
-      e.checked = false;
-    }
-  }
-};
-
 document.querySelector('.alarm div[data-id="content"]').addEventListener('change', ({target}) => {
   const entry = target.closest('.entry');
   if (entry) {
@@ -211,83 +196,94 @@ const init = (callback = () => {}) => chrome.runtime.sendMessage({
 
     clone.querySelector('[data-id="AlarmName"]').textContent = name ? ` ${name}` : '';
     
-    // Handle once tag visibility
+    // Handle once tag visibility - now show "once" text only when actually once (not repeating)
     const onceSpan = clone.querySelector('[data-id="once"]');
     onceSpan.textContent = once ? 'once' : '';
-    onceSpan.style.display = once ? '' : 'none'; // Hide if not once
+    onceSpan.style.display = once ? '' : 'none'; // Hide if not once (i.e., if repeating)
     
-    // rest of the function remains the same...
-    
+    // Rest of the function remains the same
     const times = alarm.convert(time, days);
     const date = clone.querySelector('[data-id="date"]');
     
     if (days.length > 1) {
       const map = {
-        0: 'S',
-        1: 'M',
-        2: 'T',
-        3: 'W',
-        4: 'T',
-        5: 'F',
-        6: 'S'
+        0: "S",
+        1: "M",
+        2: "T",
+        3: "W",
+        4: "T",
+        5: "F",
+        6: "S",
       };
-      date.textContent = days.map(d => map[d]).join(' ');
-      date.classList.add('range');
+      date.textContent = days.map((d) => map[d]).join(" ");
+      date.classList.add("range");
     } else if (once || days.length === 0 || days.length === 1) {
       // Create a custom formatDate function to use the entry's timeFormat
       const formatDate = (d) => {
-        const day = ({
-          0: 'Sun',
-          1: 'Mon',
-          2: 'Tue',
-          3: 'Wed',
-          4: 'Thu',
-          5: 'Fri',
-          6: 'Sat'
-        })[d.getDay()] + ', ' + ('0' + d.getDate()).substr(-2) + ' ' + ({
-          0: 'Jan',
-          1: 'Feb',
-          2: 'Mar',
-          3: 'Apr',
-          4: 'May',
-          5: 'Jun',
-          6: 'Jul',
-          7: 'Aug',
-          8: 'Sep',
-          9: 'Oct',
-          10: 'Nov',
-          11: 'Dec'
-        })[d.getMonth()];
-        
+        const day =
+          {
+            0: "Sun",
+            1: "Mon",
+            2: "Tue",
+            3: "Wed",
+            4: "Thu",
+            5: "Fri",
+            6: "Sat",
+          }[d.getDay()] +
+          ", " +
+          ("0" + d.getDate()).substr(-2) +
+          " " +
+          {
+            0: "Jan",
+            1: "Feb",
+            2: "Mar",
+            3: "Apr",
+            4: "May",
+            5: "Jun",
+            6: "Jul",
+            7: "Aug",
+            8: "Sep",
+            9: "Oct",
+            10: "Nov",
+            11: "Dec",
+          }[d.getMonth()];
+
         let hours = d.getHours();
-        let ampm = '';
-        
-        if (timeFormat === 'am') {
+        let ampm = "";
+
+        if (timeFormat === "am") {
           // Force AM format
           if (hours >= 12) {
             hours = hours - 12;
           }
           if (hours === 0) hours = 12;
-          ampm = ' AM';
-        } else if (timeFormat === 'pm') {
+          ampm = " AM";
+        } else if (timeFormat === "pm") {
           // Force PM format
           if (hours < 12) {
             hours = hours + 12;
           }
           hours = hours - 12;
           if (hours === 0) hours = 12;
-          ampm = ' PM';
+          ampm = " PM";
         }
-        
-        return day + ' ' + ('0' + hours).substr(-2) + ':' + ('0' + d.getMinutes()).substr(-2) + ampm;
+
+        return (
+          day +
+          " " +
+          ("0" + hours).substr(-2) +
+          ":" +
+          ("0" + d.getMinutes()).substr(-2) +
+          ampm
+        );
       };
 
       // Use the entry's specific timeFormat
       const dateString = formatDate(new Date(times[0]));
       date.textContent = dateString;
-      date.classList.remove('range');
+      date.classList.remove("range");
     }
-
+    
     const entry = clone.querySelector('.entry');
     entry.times = times;
     entry.o = o;
@@ -411,27 +407,27 @@ alarm.toast = () => {
     
     // Convert from AM/PM if needed
     if (selectedTimeFormat === 'am') {
-      // For AM format
       if (hours === 12) {
-        // 12 AM is stored as 0 in 24-hour format
         hours = 0;
       }
     } else if (selectedTimeFormat === 'pm') {
-      // For PM format
       if (hours < 12) {
-        // Add 12 to convert PM times to 24-hour format
         hours += 12;
       }
     }
+    
+    // HERE'S THE CHANGE: Invert the checkbox value when saving
+    // The checkbox now represents "repeat", so invert to get "once" value
+    const repeatChecked = document.querySelector('.alarm [data-id="edit"] [data-id="once"]').checked;
     
     const a = {
       id,
       days: [...document.querySelectorAll('.alarm [data-id="edit"] [data-id="days"] input[type=checkbox]')]
         .filter(e => e.checked).map(e => Number(e.value)),
       time: { hours, minutes },
-      once: document.querySelector('.alarm [data-id="edit"] [data-id="once"]').checked,
+      once: !repeatChecked, // Invert the repeat checkbox value
       name: document.querySelector('.alarm [data-id="edit"] [data-id="name"]').value,
-      timeFormat: selectedTimeFormat // Store the selected format with the alarm
+      timeFormat: selectedTimeFormat
     };
   
     const index = ids.indexOf(id);
@@ -446,12 +442,10 @@ alarm.toast = () => {
     }, () => {
       document.querySelector('.alarm div[data-id="entries"]').textContent = '';
       init(() => {
-        // Find the newly created/edited alarm entry and set it as active
         const entry = document.querySelector(`.alarm .entry[data-id="${id}"]`);
         if (entry) {
           const checkbox = entry.querySelector('input[type=checkbox]');
           checkbox.checked = true;
-          // Trigger the change event to activate the alarm
           checkbox.dispatchEvent(new Event('change', {
             bubbles: true
           }));
@@ -474,7 +468,6 @@ alarm.toast = () => {
     once: true,
     id: 'alarm-' + Math.random(),
     name: '',
-    // No default here, we'll handle defaults in the cascade logic
   }, restart = false) => {
     // Get current weekday (0-6)
     const currentDay = new Date().getDay();
@@ -493,53 +486,10 @@ alarm.toast = () => {
         e.checked = o.days.indexOf(Number(e.value)) !== -1;
       });
     }
-
-    const getSystemTimeFormat = () => {
-      // First check if the system uses 12-hour format at all
-      const locale = navigator.language
-      // const locale = 'en-GB'
-      const is12Hour = new Intl.DateTimeFormat(locale, {
-        hour: 'numeric',
-        hour12: true
-      }).format(new Date(2020, 0, 1, 13)).includes('PM');
-      
-      if (!is12Hour) {
-        // System uses 24-hour format
-        return '24h';
-      }
-      
-      // System uses 12-hour format, now check if current time is AM or PM
-      const currentHour = new Date().getHours();
-      
-      // If current hour is 12 or greater (up to 23), it's PM time
-      if (currentHour >= 12) {
-        return 'pm';
-      } else {
-        return 'am';
-      }
-    };
-    
-    // Get user's stored time format preference with system fallback
-    chrome.storage.local.get({ 'timeFormat': getSystemTimeFormat() }, prefs => {
-      // Cascade: 1. Entry format, 2. User preference, 3. System format
-      // let format = o.timeFormat || prefs.timeFormat;
-      let format = '24h'
-
-      if (o.timeFormat) {
-        format = o.timeFormat
-      } else {
-        if (prefs.timeFormat === '24h') {
-          format = prefs.timeFormat
-        } else {
-          const currentHour = new Date().getHours();
-          if (currentHour >= 12) {
-            format = "pm";
-          } else {
-            format = "am";
-          }
-        }
-      }
-
+  
+    // Get user's stored time format preference
+    chrome.storage.local.get({ 'timeFormat': '24h' }, prefs => {
+      let format = o.timeFormat || prefs.timeFormat;
       const timeFormatSelector = document.querySelector('.alarm [data-id="edit"] [data-id="timeFormat"]');
       
       // Set the format selector to the determined format
@@ -548,13 +498,11 @@ alarm.toast = () => {
       // Calculate display hours based on format
       let displayHours = o.time.hours;
       if (format === 'am') {
-        // For AM format
         if (o.time.hours >= 12) {
           displayHours = o.time.hours % 12;
         }
         if (displayHours === 0) displayHours = 12;
       } else if (format === 'pm') {
-        // For PM format
         displayHours = o.time.hours % 12;
         if (displayHours === 0) displayHours = 12;
       }
@@ -565,7 +513,10 @@ alarm.toast = () => {
       hours.value = ('0' + displayHours).substr(-2);
       minutes.value = ('0' + o.time.minutes).substr(-2);
       
-      document.querySelector('.alarm [data-id="edit"] [data-id="once"]').checked = o.once;
+      // HERE'S THE CHANGE: Invert the once value for the repeat checkbox
+      // Set repeat checkbox to checked when it should repeat (once = false)
+      document.querySelector('.alarm [data-id="edit"] [data-id="once"]').checked = !o.once;
+      
       document.querySelector('.alarm [data-id="edit"]').dataset.assign = o.id;
       document.querySelector('.alarm [data-id="edit"]').dataset.restart = restart;
       document.querySelector('.alarm [data-id="edit"] [data-id="name"]').value = o.name || '';
@@ -576,12 +527,11 @@ alarm.toast = () => {
         bubbles: true
       }));
       
-      // Update time format indicators (AM/PM/24h) if you have this function
+      // Update time format indicators if needed
       if (typeof updateTimeInputs === 'function') {
         updateTimeInputs(format);
       }
       
-      // Store the format in a data attribute for later use when saving
       document.querySelector('.alarm [data-id="edit"]').dataset.timeFormat = format;
     });
   };
@@ -623,36 +573,34 @@ chrome.storage.onChanged.addListener(ps => {
   }
 });
 
-// Modify the once checkbox handler to update days selection
 document.querySelector('.alarm [data-id="edit"] [data-id="once"]').addEventListener('change', e => {
   const dayCheckboxes = document.querySelectorAll('.alarm [data-id="edit"] [data-id="days"] input[type=checkbox]');
   
-  if (e.target.checked) {
-    // When "Once" is checked, only select current day
+  if (!e.target.checked) {
+    // When "Repeat" is unchecked, only select current day (for a one-time alarm)
     const currentDay = new Date().getDay();
     dayCheckboxes.forEach(checkbox => {
       checkbox.checked = Number(checkbox.value) === currentDay;
     });
   } else {
-    // When "Once" is unchecked, select all days
+    // When "Repeat" is checked, select all days
     dayCheckboxes.forEach(checkbox => {
       checkbox.checked = true;
     });
   }
 });
 
-// Also modify the helper function for consistent behavior
 document.querySelector('.alarm [data-id="edit"] [data-id="once"]').onclick = e => {
   const days = [...document.querySelectorAll('.alarm [data-id="edit"] [data-id="days"] input[type=checkbox]:checked')];
-  if (e.target.checked) {
-    // When checking "Once", clear all days except current
+  if (!e.target.checked) {
+    // When unchecking "Repeat" (which means it's one-time), clear all days except current
     const currentDay = new Date().getDay();
     for (const e of document.querySelectorAll('.alarm [data-id="edit"] [data-id="days"] input[type=checkbox]')) {
       e.checked = Number(e.value) === currentDay;
     }
   } else {
-    // When unchecking "Once", select all days if none are selected
-    if (days.length === 0 || days.length === 1) {  // Also check if only one day is selected
+    // When checking "Repeat", select all days if none or just one day is selected
+    if (days.length === 0 || days.length === 1) {
       for (const e of document.querySelectorAll('.alarm [data-id="edit"] [data-id="days"] input[type=checkbox]')) {
         e.checked = true;
       }
