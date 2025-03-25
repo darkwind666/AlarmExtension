@@ -20,6 +20,8 @@ const notifications = {
     args.set('sound', opts.sound);
     args.set('volume', opts.volume);
     args.set('repeats', opts.repeats);
+    // Add the alarm name to the URL parameters
+    args.set('alarmName', opts.alarmName || '');
 
     chrome.storage.local.get({
       'notify-position': 'center' // center, br, tr
@@ -43,16 +45,31 @@ const notifications = {
 };
 
 const alarms = {
+
   fire({name}) {
-    const set = (name, title, sound, repeats, volume, message = `Time's up`) => notifications.clear(name, () => {
-      notifications.create(name, {
-        title,
-        message: message + '\n\n' + (new Date()).toLocaleString(),
-        sound,
-        volume,
-        repeats
+    const set = (name, title, sound, repeats, volume, message = `Time's up`) => {
+      // Retrieve alarms to get the name
+      chrome.storage.local.get({
+        'alarms': []
+      }, prefs => {
+        // Find the alarm that matches the current alarm name
+        const id = name.split(':')[0]; // Extract the base ID
+        const alarm = prefs.alarms.find(a => a.id === id);
+        
+        notifications.clear(name, () => {
+          notifications.create(name, {
+            title,
+            message: message + '\n\n' + (new Date()).toLocaleString(),
+            sound,
+            volume,
+            repeats,
+            alarmName: alarm ? alarm.name : '' // Use the name from the alarm object if found
+          });
+        });
       });
-    });
+    };
+    
+    // Rest of the function remains the same as in the previous implementation
     if (name.startsWith('timer-')) {
       chrome.storage.local.get({
         'src-timer': 'data/sounds/1.mp3',
@@ -102,6 +119,7 @@ const alarms = {
       });
     }
   },
+
   get(name, c) {
     chrome.alarms.get(name, c);
   },

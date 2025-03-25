@@ -8,6 +8,10 @@ window.alarm = alarm;
 const placeholderImage = document.querySelector('.placeholderImage');
 placeholderImage.style.display = "none";
 
+// Get the selected time format from the UI
+let selectedTimeFormat = '24h'
+selectedTimeFormat = document.querySelector('.alarm [data-id="edit"] [data-id="timeFormat"]').value;
+
 alarm.format = (d, time = false) => {
   return new Promise(resolve => {
     chrome.storage.local.get({ 'timeFormat': '24h' }, prefs => {
@@ -116,7 +120,8 @@ document.querySelector('.alarm div[data-id="content"]').addEventListener('change
             when,
             periodInMinutes
           },
-          name: entry.dataset.id + ':' + index
+          name: entry.dataset.id + ':' + index,
+          alarmName: entry.o.name || ''
         }));
       }
       chrome.runtime.sendMessage({
@@ -398,8 +403,6 @@ alarm.toast = () => {
     const restart = document.querySelector('.alarm [data-id="edit"]').dataset.restart === 'true';
     const ids = prefs.alarms.map(a => a.id);
     
-    // Get the selected time format from the UI
-    const selectedTimeFormat = document.querySelector('.alarm [data-id="edit"] [data-id="timeFormat"]').value;
     chrome.storage.local.set({ 'timeFormat': selectedTimeFormat });
     
     let hours = Math.min(23, Math.max(0, Number(document.querySelector('.alarm [data-id="edit"] [data-id="hours"]').value)));

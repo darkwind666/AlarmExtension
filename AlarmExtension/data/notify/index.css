@@ -20,6 +20,10 @@ body {
   background-color: #333;
 }
 
+body.has-title {
+  height: 350px;
+}
+
 .popup {
   width: 350px;
   height: 300px;
@@ -30,10 +34,18 @@ body {
   color: white;
 }
 
+body.has-title .popup {
+  height: 350px;
+}
+
 .icon img {
   width: 100px;
   margin-top: 30px;
   margin-bottom: 10px;
+}
+
+body.has-title .icon img {
+  margin-top: 5px;
 }
 
 .snooze-section {
@@ -94,6 +106,19 @@ body {
 
 .time-select:hover {
   background-color: #666566;
+}
+
+.notification-title {
+  display: none;
+  text-align: center;
+  padding: 10px;
+  font-weight: bold;
+  font-size: 16px;
+  color: white;
+}
+
+body.has-title .notification-title {
+  display: block;
 }
 
 

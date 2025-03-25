@@ -87,3 +87,14 @@ document.getElementById('range').onchange = e => chrome.storage.local.set({
 chrome.storage.local.get({
   'range-index': 0
 }, prefs => document.getElementById('range').selectedIndex = prefs['range-index']);
+
+
+const alarmName = args.get('alarmName') || '';
+
+document.addEventListener('DOMContentLoaded', () => {
+  const notificationTitle = document.getElementById('notification-title');
+  if (notificationTitle && alarmName) {
+    notificationTitle.textContent = alarmName;
+    document.body.classList.add('has-title');
+  }
+});
